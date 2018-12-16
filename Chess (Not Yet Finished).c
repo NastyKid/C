@@ -1,38 +1,52 @@
 /**
     CHESS IN C : PROGRAM BY MR.S
     Started: 22.9.18 1700
+
+    Partly Finished: 03.12.18 1032
     Finished:
 
     Main problem:
         > Players can manipulate other player's pieces. [SOLVED]
-
         > friendly fire is ON.. Player can devour it's own chess piece.  [SOLVED]
 
+        Minor Problem:
+            > Checkmate Warning
+            > Castling
 
-    Program :
+    Program Components:
         Function I: Main
-        Function II: Delay
-        Function III: game
+        Function II: GameOver
+        Function III: Delay
+        Function IV: game
             Cluster I: Assigning coordinates
             Cluster II: Draw the board
             Cluster III: Gameplay
                 Sector I: Player's input & input errors
-                Sector II: Pawn Logics
+                Sector II: Pawn's Logic
+                Sector III: Rook's Logic
+                Sector IV: Knight's Logic
+                Sector V: Bishop's Logic
+                Sector VI: Queen's Logic
+                Sector VII: King's Logic
 
+    Suggestions:
+        > method for each piece
+        > globalization of the variables
 **/
 #include <stdio.h>
 #include <stdlib.h>
 
-void delay(int sec);
+void GameOver(int player);
 void game();
+void delay(int sec);
 
-int main()
+void main()
 {
     int choice;
 
-    printf("****** CHESS GAME ******\n");
-    printf("[1] PLAY\t[2] EXIT\n");
-    printf("Choice: ");
+    printf("\t\t****** CHESS GAME ******\n");
+    printf("\t\t[1] PLAY\t[2] EXIT\n");
+    printf("\t\tChoice: ");
     scanf("%d", &choice);
 
     if(choice == 1){
@@ -41,15 +55,16 @@ int main()
     }else{
         return 0;
     }
-    return 0;
 }
 
 void game(){
     char chess_board[8][8]; //chess_board[y][x]
     char selected_piece,selected_piece_tracker;
+    int pos_k[8][2], pos_b[8][2];
     int pieces_tracker[8][8],piece_tracker;
     int y_len,x_len,count = 0,player = 1,round_counter = 1,promotion;
     int move_x,move_y,sel_x,sel_y,move_y_tracker,move_x_tracker,sel_y_tracker,sel_x_tracker;
+
     // Cluster I: Assigning coordinates
     // White
     chess_board[0][0] = 'r';
@@ -97,12 +112,16 @@ void game(){
     }
 
 board:
-
+    // +-----+
+    // |     |
+    // |  p  |
+    // |     |
+    // +-----+
     // Cluster II: Draw the board
-    printf("\t     PLAYER ONE\n");
-    printf("  x 1");
-    for(int x = 0,x_count = 2; x < 30; x++){
-        if(count == 3){
+    printf("\t\t      PLAYER ONE\n");
+    printf("   X  1");
+    for(int x = 0,x_count = 2; x < 48; x++){
+        if(count == 5 && x_count < 9){
                 printf("%d",x_count);
                 count = 0;
                 x_count++;
@@ -111,10 +130,11 @@ board:
                 count++;
             }
     }
+
     count = 0;
-    printf("\ny +");
-    for(int dash = 0; dash < 32; dash++){
-            if(count == 3){
+    printf("\n Y +");
+    for(int dash = 0; dash < 48; dash++){
+            if(count == 5){
                 printf("+");
                 count = 0;
             }else{
@@ -122,20 +142,30 @@ board:
                 count++;
             }
         }
+    int count_2;
     for( y_len = 0; y_len < 8; y_len++){
         count = 0;
         printf("\n");
-
-        printf("%d |",y_len+1);
+        // top
+        printf("   |");
+        for(int i = 0 ; i < 8 ; i++){
+            printf("     |");
+        }
+        // mid
+        printf("\n %d |",y_len+1);
         for( x_len = 0; x_len < 8 ; x_len++){
-            printf(" %c |", chess_board[y_len][x_len]);
+            printf("  %c  |", chess_board[y_len][x_len]);
 
         }
-
+        // bot
+        printf("\n   |");
+        for(int i = 0 ; i < 8 ; i++){
+            printf("     |");
+        }
         printf("\n");
-        printf("  +");
-        for(int dash = 0; dash < 32; dash++){
-            if(count == 3){
+        printf("   +");
+        for(int dash = 0; dash < 48; dash++){
+            if(count == 5){
                 printf("+");
                 count = 0;
             }else{
@@ -144,8 +174,9 @@ board:
             }
         }
     }
-        printf("\n\t     PLAYER TWO\n");
-
+        printf("\n\t\t      PLAYER TWO\n");
+        printf("LEGEND:");
+        printf("\n\tp = pawn\tr = rook\tk = knight\n\tb = bishop\tQ = Queen\tK = King\n");
     // Cluster III: Gameplay
         // Sector I: Player's input & input errors
         // Selecting
@@ -181,7 +212,7 @@ board:
             goto board;
         }
 
-        // Sector II: Pawn Logic
+        // Sector II: Pawn's Logic
         // 1st Pawn Move:
         if(selected_piece == 'p'){
                 if(player == 1 && ((sel_y == 2 || sel_y == 7) && (sel_x <= 8)) && ((move_y - sel_y) > 2 )) {
@@ -281,7 +312,7 @@ board:
                     }
                 }
         }
-        // Sector III: Rook Logic
+        // Sector III: Rook's Logic
         if(selected_piece == 'r'){
             // Preventing the rook to move other direction except straight line
             if(move_y != sel_y && move_x != sel_x){
@@ -294,51 +325,580 @@ board:
             // vertical
             if(sel_y < move_y){
                 // down
-                 for(int y = sel_y; y <= move_y-1;y++){
-                    if(chess_board[y][sel_x-1] != ' '){
-                        system("cls");
-                        printf("ERROR_v1: INVALID MOVE!\n");
-                        goto board;
+                if(pieces_tracker[move_y-1][move_x-1] != player){
+                    for(int y = sel_y; y <= move_y-1;y++){
+                        if(y == move_y-1 && chess_board[y][sel_x-1] != ' '){
+                            goto move;
+                        }
+                        if(chess_board[y][sel_x-1] != ' '){
+                            system("cls");
+                            printf("ERROR: INVALID MOVE!\n");
+                            goto board;
+                        }
                     }
-                 }
+                }else{
+                    system("cls");
+                    printf("ERROR: INVALID MOVE!\n");
+                    goto board;
+                }
             }else if(sel_y > move_y){
                 // up
-                for(int y = sel_y-2; y > move_y-1;y--){
-                    if(chess_board[y][sel_x-1] != ' '){
-                        system("cls");
-                        printf("ERROR_v2: INVALID MOVE!\n");
-                        goto board;
+                if(pieces_tracker[move_y-1][move_x-1] != player){
+                    for(int y = sel_y-2; y > move_y-1;y--){
+                        if(y == move_y-1 && chess_board[y][sel_x-1] != ' '){
+                            goto move;
+                        }
+                        if(chess_board[y][sel_x-1] != ' '){
+                            system("cls");
+                            printf("ERROR: INVALID MOVE!\n");
+                            goto board;
+                        }
                     }
+                }else{
+                    system("cls");
+                    printf("ERROR: INVALID MOVE!\n");
+                    goto board;
                 }
             }
             // horizontal
             if(sel_x < move_x){
                 // right
-                 for(int x = sel_x; x <= move_x-1;x++){
-                    if(chess_board[sel_y-1][x] != ' '){
-                        system("cls");
-                        printf("ERROR: INVALID MOVE!\n");
-                        goto board;
+                if(pieces_tracker[move_y-1][move_x-1] != player){
+                    for(int x = sel_x; x <= move_x-1;x++){
+                        if(x == move_x-1 && chess_board[sel_y-1][x] != ' '){
+                            goto move;
+                        }
+                        if(chess_board[sel_y-1][x] != ' '){
+                            system("cls");
+                            printf("ERROR: INVALID MOVE!\n");
+                            goto board;
+                        }
                     }
+                 }else{
+                    system("cls");
+                    printf("ERROR: INVALID MOVE!\n");
+                    goto board;
                  }
             }else if(sel_x > move_x){
                 // left
-                for(int x = sel_x-2; x >= move_x-1;x--){
-                    if(chess_board[sel_y-1][x] != ' '){
-                        system("cls");
-                        printf("ERROR: INVALID MOVE!\n");
-                        goto board;
+                if(pieces_tracker[move_y-1][move_x-1] != player){
+                    for(int x = sel_x-2; x >= move_x-1;x--){
+                        if(x == move_x-1 && chess_board[sel_y-1][x] != ' '){
+                            goto move;
+                        }
+                        if(chess_board[sel_y-1][x] != ' '){
+                            system("cls");
+                            printf("ERROR: INVALID MOVE!\n");
+                            goto board;
+                        }
                     }
+                }else{
+                    system("cls");
+                    printf("ERROR: INVALID MOVE!\n");
+                    goto board;
                  }
             }
         }
+        // Sector IV: Knight's Logic
+        if(selected_piece == 'k'){
+            pos_k[0][0] = sel_y + 2;
+            pos_k[0][1] = sel_x + 1;
+
+            pos_k[1][0] = sel_y + 1;
+            pos_k[1][1] = sel_x + 2;
+
+            pos_k[2][0] = sel_y + 2;
+            pos_k[2][1] = sel_x - 1;
+
+            pos_k[3][0] = sel_y + 1;
+            pos_k[3][1] = sel_x - 2;
+
+            pos_k[4][0] = sel_y - 1;
+            pos_k[4][1] = sel_x - 2;
+
+            pos_k[5][0] = sel_y - 2;
+            pos_k[5][1] = sel_x - 1;
+
+            pos_k[6][0] = sel_y - 2;
+            pos_k[6][1] = sel_x + 1;
+
+            pos_k[7][0] = sel_y - 1;
+            pos_k[7][1] = sel_x + 2;
+            if((move_x != pos_k[0][1] || move_y != pos_k[0][0]) && (move_x != pos_k[1][1] || move_y != pos_k[1][0]) && (move_x != pos_k[2][1] || move_y != pos_k[2][0]) && (move_x != pos_k[3][1] || move_y != pos_k[3][0]) && (move_x != pos_k[4][1] || move_y != pos_k[4][0]) && (move_x != pos_k[5][1] || move_y != pos_k[5][0]) && (move_x != pos_k[6][1] || move_y != pos_k[6][0]) && (move_x != pos_k[7][1] || move_y != pos_k[7][0])){
+                system("cls");
+                printf("ERROR: Invalid Move!\n");
+                goto board;
+            }
+        }
+        // Sector V: Bishop's Logic
+        if(selected_piece == 'b'){
+            int count = 0;
+            // Preventing the bishop to move other direction except sideway
+            if(sel_y == move_y || sel_x == move_x){
+                system("cls");
+                printf("ERROR: INVALID MOVE!\n");
+                goto board;
+            }
+            // Down-Right
+           if(sel_y < move_y && sel_x < move_x){
+            // down-right
+            if(pieces_tracker[move_y-1][move_x-1] != player){
+                for(int y = sel_y+1, x = sel_x+1, move = 0; y <= 8 && x <= 8; y++,x++,move++){
+                    // setting bishop track
+                    pos_b[move][0] = y;
+                    pos_b[move][1] = x;
+                }
+                for(int y = sel_y, x = sel_x; y <= move_y-1 ; y++,x++){
+                    if(y == move_y-1 && chess_board[y][move_x-1] != ' '){
+                        goto move;
+                    }
+                    // No Jumping over to the pieces
+                    if(chess_board[y][x] != ' '){
+                        system("cls");
+                        printf("ERROR: Invalid Move!\n");
+                        goto board;
+                    }
+                }
+                for(int i = 0; i < 8; i++){
+                    // verifying the player's move
+                    if(pos_b[i][0] >= 0){
+                        if(pos_b[i][0] == move_y && pos_b[i][1] == move_x){
+                            count++;
+                        }
+                    }
+                }
+                if(count == 0){
+                    system("cls");
+                    printf("ERROR: Invalid Move!\n");
+                    goto board;
+                }
+            }else{
+                    system("cls");
+                    printf("ERROR: INVALID MOVE!\n");
+                    goto board;
+            }
+           }
+            // Down-Left
+           if(sel_y < move_y && sel_x > move_x){
+            // down-left
+            if(pieces_tracker[move_y-1][move_x-1] != player){
+                for(int y = sel_y+1, x = sel_x-1, move = 0; y <= 8 && x >= 0; y++,x--,move++){
+                    // setting bishop track
+                    pos_b[move][0] = y;
+                    pos_b[move][1] = x;
+                }
+                for(int y = sel_y, x = sel_x-2; y <= move_y-1 ; y++,x--){
+                    if(y == move_y-1 && chess_board[y][move_x-1] != ' '){
+                        goto move;
+                    }
+                    // No Jumping over to the pieces
+                    if(chess_board[y][x] != ' '){
+                        system("cls");
+                        printf("ERROR: Invalid Move!\n");
+                        goto board;
+                    }
+                }
+                for(int i = 0; i < 8; i++){
+                    // verifying the player's move
+                    if(pos_b[i][0] >= 0){
+                        if(pos_b[i][0] == move_y && pos_b[i][1] == move_x){
+                            count++;
+                        }
+                    }
+                }
+                if(count == 0){
+                    system("cls");
+                    printf("ERROR: Invalid Move!\n");
+                    goto board;
+                }
+            }else{
+                    system("cls");
+                    printf("ERROR: YOUR TRYING TO EAT IS YOUR OWN PIECE!\n");
+                    goto board;
+            }
+           }
+            // Up-Right
+           if(sel_y > move_y && sel_x < move_x){
+            // up-right
+            if(pieces_tracker[move_y-1][move_x-1] != player){
+                for(int y = sel_y-1, x = sel_x+1, move = 0; y >= 0 && x <= 8 ; y--,x++,move++){
+                    // setting bishop track
+                    pos_b[move][0] = y;
+                    pos_b[move][1] = x;
+                }
+                for(int y = sel_y-2, x = sel_x; y >= move_y-1 ; y--,x++){
+                    if(y == move_y-1 && chess_board[y][move_x-1] != ' '){
+                        goto move;
+                    }
+                    // No Jumping over to the pieces
+                    if(chess_board[y][x] != ' '){
+                        system("cls");
+                        printf("ERROR: Invalid Move!\n");
+                        goto board;
+                    }
+                }
+                for(int i = 0; i < 8; i++){
+                    // verifying the player's move
+                    if(pos_b[i][0] >= 0){
+                        if(pos_b[i][0] == move_y && pos_b[i][1] == move_x){
+                            count++;
+                        }
+                    }
+                }
+                if(count == 0){
+                    system("cls");
+                    printf("ERROR: Invalid Move!\n");
+                    goto board;
+                }
+            }else{
+                    system("cls");
+                    printf("ERROR: INVALID MOVE!\n");
+                    goto board;
+            }
+           }
+            // Up-Left
+           if(sel_y > move_y && sel_x > move_x){
+            // up-left
+            if(pieces_tracker[move_y-1][move_x-1] != player){
+                for(int y = sel_y-1, x = sel_x-1, move = 0; y >= 0 && x >= 0 ; y--,x--,move++){
+                    // setting bishop track
+                    pos_b[move][0] = y;
+                    pos_b[move][1] = x;
+                }
+                for(int y = sel_y-2, x = sel_x-2; y >= move_y-1 ; y--,x--){
+                    if(y == move_y-1 && chess_board[y][move_x-1] != ' '){
+                        goto move;
+                    }
+                    // No Jumping over to the pieces
+                    if(chess_board[y][x] != ' '){
+                        system("cls");
+                        printf("ERROR: Invalid Move!\n");
+                        goto board;
+                    }
+                }
+                for(int i = 0; i < 8; i++){
+                    // verifying the player's move
+                    if(pos_b[i][0] >= 0){
+                        if(pos_b[i][0] == move_y && pos_b[i][1] == move_x){
+                            count++;
+                        }
+                    }
+                }
+                if(count == 0){
+                    system("cls");
+                    printf("ERROR: Invalid Move!\n");
+                    goto board;
+                }
+            }else{
+                    system("cls");
+                    printf("ERROR: INVALID MOVE!\n");
+                    goto board;
+            }
+           }
+        }
+        // Sector VI: Queen's Logic
+        if(selected_piece == 'Q'){
+            // straight and side line only
+            int count = 0;
+            // vertical
+            if(sel_y < move_y && sel_x == move_x){
+                // down
+                if(pieces_tracker[move_y-1][move_x-1] != player){
+                    for(int y = sel_y; y <= move_y-1;y++){
+                        if(y == move_y-1 && chess_board[y][sel_x-1] != ' '){
+                            goto move;
+                        }
+                        if(chess_board[y][sel_x-1] != ' '){
+                            system("cls");
+                            printf("ERROR: INVALID MOVE!\n");
+                            goto board;
+                        }
+                    }
+                }else{
+                    system("cls");
+                    printf("ERROR: INVALID MOVE!\n");
+                    goto board;
+                }
+            }else if(sel_y > move_y && sel_x == move_x){
+                // up
+                if(pieces_tracker[move_y-1][move_x-1] != player){
+                    for(int y = sel_y-2; y > move_y-1;y--){
+                        if(y == move_y-1 && chess_board[y][sel_x-1] != ' '){
+                            goto move;
+                        }
+                        if(chess_board[y][sel_x-1] != ' '){
+                            system("cls");
+                            printf("ERROR: INVALID MOVE! vu1\n");
+                            goto board;
+                        }
+                    }
+                }else{
+                    system("cls");
+                    printf("ERROR: INVALID MOVE!\n");
+                    goto board;
+                }
+            }
+            // horizontal
+            if(sel_x < move_x && sel_y == move_y){
+                // right
+                if(pieces_tracker[move_y-1][move_x-1] != player){
+                    for(int x = sel_x; x <= move_x-1;x++){
+                        if(x == move_x-1 && chess_board[sel_y-1][x] != ' '){
+                            goto move;
+                        }
+                        if(chess_board[sel_y-1][x] != ' '){
+                            system("cls");
+                            printf("ERROR: INVALID MOVE!\n");
+                            goto board;
+                        }
+                    }
+                 }else{
+                    system("cls");
+                    printf("ERROR: INVALID MOVE! hr2\n");
+                    goto board;
+                 }
+            }else if(sel_x > move_x && sel_y == move_y){
+                // left
+                if(pieces_tracker[move_y-1][move_x-1] != player){
+                    for(int x = sel_x-2; x >= move_x-1;x--){
+                        if(x == move_x-1 && chess_board[sel_y-1][x] != ' '){
+                            goto move;
+                        }
+                        if(chess_board[sel_y-1][x] != ' '){
+                            system("cls");
+                            printf("ERROR: INVALID MOVE! hl1\n");
+                            goto board;
+                        }
+                    }
+                }else{
+                    system("cls");
+                    printf("ERROR: INVALID MOVE! hl2\n");
+                    goto board;
+                 }
+            }
+            // Down-Right
+           if(sel_y < move_y && sel_x < move_x){
+            // down-right
+            if(pieces_tracker[move_y-1][move_x-1] != player){
+                for(int y = sel_y+1, x = sel_x+1, move = 0; y <= 8 && x <= 8; y++,x++,move++){
+                    // setting bishop track
+                    pos_b[move][0] = y;
+                    pos_b[move][1] = x;
+                }
+                for(int y = sel_y, x = sel_x; y <= move_y-1 ; y++,x++){
+                    if(y == move_y-1 && chess_board[y][move_x-1] != ' '){
+                        goto move;
+                    }
+                    // No Jumping over to the pieces
+                    if(chess_board[y][x] != ' '){
+                        system("cls");
+                        printf("ERROR: Invalid Move! drx1\n");
+                        goto board;
+                    }
+                }
+                for(int i = 0; i < 8; i++){
+                    // verifying the player's move
+                    if(pos_b[i][0] >= 0){
+                        if(pos_b[i][0] == move_y && pos_b[i][1] == move_x){
+                            count++;
+                        }
+                    }
+                }
+                if(count == 0){
+                    system("cls");
+                    printf("ERROR: Invalid Move! drx2\n");
+                    goto board;
+                }
+            }else{
+                    system("cls");
+                    printf("ERROR: INVALID MOVE! drx3\n");
+                    goto board;
+            }
+           }
+            // Down-Left
+           if(sel_y < move_y && sel_x > move_x){
+            // down-left
+            if(pieces_tracker[move_y-1][move_x-1] != player){
+                for(int y = sel_y+1, x = sel_x-1, move = 0; y <= 8 && x >= 0; y++,x--,move++){
+                    // setting bishop track
+                    pos_b[move][0] = y;
+                    pos_b[move][1] = x;
+                }
+                for(int y = sel_y, x = sel_x-2; y <= move_y-1 ; y++,x--){
+                    if(y == move_y-1 && chess_board[y][move_x-1] != ' '){
+                        goto move;
+                    }
+                    // No Jumping over to the pieces
+                    if(chess_board[y][x] != ' '){
+                        system("cls");
+                        printf("ERROR: Invalid Move! dlx1\n");
+                        goto board;
+                    }
+                }
+                for(int i = 0; i < 8; i++){
+                    // verifying the player's move
+                    if(pos_b[i][0] >= 0){
+                        if(pos_b[i][0] == move_y && pos_b[i][1] == move_x){
+                            count++;
+                        }
+                    }
+                }
+                if(count == 0){
+                    system("cls");
+                    printf("ERROR: Invalid Move! dlx2\n");
+                    goto board;
+                }
+            }else{
+                    system("cls");
+                    printf("ERROR: YOUR TRYING TO EAT IS YOUR OWN PIECE!\n");
+                    goto board;
+            }
+           }
+            // Up-Right
+           if(sel_y > move_y && sel_x < move_x){
+            // up-right
+            if(pieces_tracker[move_y-1][move_x-1] != player){
+                for(int y = sel_y-1, x = sel_x+1, move = 0; y >= 0 && x <= 8 ; y--,x++,move++){
+                    // setting bishop track
+                    pos_b[move][0] = y;
+                    pos_b[move][1] = x;
+                }
+                for(int y = sel_y-2, x = sel_x; y >= move_y-1 ; y--,x++){
+                    if(y == move_y-1 && chess_board[y][move_x-1] != ' '){
+                        goto move;
+                    }
+                    // No Jumping over to the pieces
+                    if(chess_board[y][x] != ' '){
+                        system("cls");
+                        printf("ERROR: Invalid Move! urx1\n");
+                        goto board;
+                    }
+                }
+                for(int i = 0; i < 8; i++){
+                    // verifying the player's move
+                    if(pos_b[i][0] >= 0){
+                        if(pos_b[i][0] == move_y && pos_b[i][1] == move_x){
+                            count++;
+                        }
+                    }
+                }
+                if(count == 0){
+                    system("cls");
+                    printf("ERROR: Invalid Move! urx2\n");
+                    goto board;
+                }
+            }else{
+                    system("cls");
+                    printf("ERROR: INVALID MOVE! urx3\n");
+                    goto board;
+            }
+           }
+            // Up-Left
+           if(sel_y > move_y && sel_x > move_x){
+            // up-left
+            if(pieces_tracker[move_y-1][move_x-1] != player){
+                for(int y = sel_y-1, x = sel_x-1, move = 0; y >= 0 && x >= 0 ; y--,x--,move++){
+                    // setting bishop track
+                    pos_b[move][0] = y;
+                    pos_b[move][1] = x;
+                }
+                for(int y = sel_y-2, x = sel_x-2; y >= move_y-1 ; y--,x--){
+                    if(y == move_y-1 && chess_board[y][move_x-1] != ' '){
+                        goto move;
+                    }
+                    // No Jumping over to the pieces
+                    if(chess_board[y][x] != ' '){
+                        system("cls");
+                        printf("ERROR: Invalid Move! ulx1\n");
+                        goto board;
+                    }
+                }
+                for(int i = 0; i < 8; i++){
+                    // verifying the player's move
+                    if(pos_b[i][0] >= 0){
+                        if(pos_b[i][0] == move_y && pos_b[i][1] == move_x){
+                            count++;
+                        }
+                    }
+                }
+                if(count == 0){
+                    system("cls");
+                    printf("ERROR: Invalid Move! ulx2\n");
+                    goto board;
+                }
+            }else{
+                    system("cls");
+                    printf("ERROR: INVALID MOVE! ulx3\n");
+                    goto board;
+            }
+           }
+        }
+        // Sector VII: King's Logic
+        if(selected_piece == 'K'){
+            if(move_x > sel_x+1 && move_y == sel_y){
+            // Right
+                system("cls");
+                printf("ERROR: Invalid Move! r\n");
+                goto board;
+            }
+            if(move_x < sel_x-1 && move_y == sel_y){
+            // Left
+                system("cls");
+                printf("ERROR: Invalid Move! l\n");
+                goto board;
+            }
+            if(move_y > sel_y+1 && move_x == sel_x){
+            // Down
+                system("cls");
+                printf("ERROR: Invalid Move! d\n");
+                goto board;
+            }
+            if(move_y < sel_y-1 && move_x == sel_x){
+            // Up
+                system("cls");
+                printf("ERROR: Invalid Move! u\n");
+                goto board;
+            }
+            if(move_x > sel_x+1 && move_y > sel_y+1){
+            // Down-Right
+                system("cls");
+                printf("ERROR: Invalid Move! dr1\n");
+                goto board;
+            }
+            if(move_x > sel_x+1 && move_y < sel_y-1){
+            // Up-Right
+                system("cls");
+                printf("ERROR: Invalid Move! ur\n");
+                goto board;
+            }
+            if(move_x < sel_x-1 && move_y > sel_y+1){
+            // Down-Left
+                system("cls");
+                printf("ERROR: Invalid Move! dl\n");
+                goto board;
+            }
+            if(move_x < sel_x-1 && move_y < sel_y-1){
+            // Up-Left
+                system("cls");
+                printf("ERROR: Invalid Move! ul\n");
+                goto board;
+            }
+            if(chess_board[move_y-1][move_x-1] != ' ' && pieces_tracker[move_y-1][move_x-1] == player){
+                system("cls");
+                printf("ERROR: Invalid Move!\n");
+                goto board;
+            }
+        }
+move:
         // Friendly Fire : OFF
         if(pieces_tracker[move_y-1][move_x-1] == player ){
                 system("cls");
                 printf("ERROR: YOUR TRYING TO EAT IS YOUR OWN PIECE!\n");
                 goto board;
         }
-move:
+        if(chess_board[move_y-1][move_x-1] == 'K'){
+            GameOver(player);
+        }
         //Move the piece
         chess_board[sel_y-1][sel_x-1] = ' ';
         chess_board[move_y-1][move_x-1] = selected_piece;
@@ -361,14 +921,36 @@ move:
         goto board;
 }
 
+void GameOver(int player){
+    char choice;
+
+    system("cls");
+    printf("\t\t*******************\n");
+    printf("\t\t* G A M E O V E R *\n");
+    printf("\t\t*******************\n");
+    printf("\t\t   PLAYER %d WINS\n\n",player);
+repeat:
+    printf("\t\tPlay again? [Y/N] > ");
+    scanf("%s", &choice);
+    if((choice != 'N' && choice != 'n') && (choice != 'Y' && choice != 'y')){
+        printf("\t\tError: Invalid Character!\n");
+        goto repeat;
+    }
+    if(choice == 'Y' || choice == 'y'){
+        system("cls");
+        main();
+    }else{
+        system("cls");
+        printf("\t\t***********************\n");
+        printf("\t\t* THANK YOU! GOODBYE! *\n");
+        printf("\t\t***********************\n");
+        return 0;
+    }
+}
 
 void delay(int sec){
-    int c,d;
-    sec = sec * 10000;
-    for(c = 1;c <= sec; c++){
-        for(d = 1; d <= sec; d++){
-
-        }
-    }
-
+    for (int c = 1; c <= (sec * 10000); c++)
+       for (int d = 1; d <= (sec * 10000); d++)
+       {}
 }
+
